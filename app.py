@@ -107,7 +107,7 @@ def chart_word_cloud():
 
 if __name__ == '__main__':
     init_db()  # Tạo bảng nếu chưa có
-    app.run(debug=True)
-    # import os
-    # port = int(os.environ.get('PORT', 8080))  # Dùng 8080 là port mặc định khi không có biến môi trường
-    # app.run(host='0.0.0.0', port=port)
+    # app.run(debug=True)
+    import os
+    port = int(os.environ.get('PORT', 8080))  # Dùng 8080 là port mặc định khi không có biến môi trường
+    app.run(host='0.0.0.0', port=port)
