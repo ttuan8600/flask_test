@@ -22,6 +22,10 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Read from file and save data into sqlite
+def read_from_file_and_store():
+    
+
 # Gọi API và lưu vào SQLite
 def fetch_and_store_data():
     url = "https://apigis.gso.gov.vn/api/web/exportdetail"
