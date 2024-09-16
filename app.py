@@ -2,6 +2,7 @@ from flask import Flask, render_template, send_file
 import requests
 import sqlite3
 from wordcloud import WordCloud
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
@@ -24,7 +25,22 @@ def init_db():
 
 # Read from file and save data into sqlite
 def read_from_file_and_store():
-    
+    # Print the current working directory
+    # print("Current Working Directory:", os.getcwd()) # Use for debugging
+
+    # Set the relative path to the dataset folder
+    dataset_path = os.getcwd() + "/raw data"
+
+    # Display the contents of the dataset folder
+    # print(os.listdir(dataset_path)) # Use for debugging
+
+    fn = "pci.xlsx"
+
+    fp = os.path.join(dataset_path, fn)
+
+    df = pd.read_excel(fp, index_col=0)
+
+    print(df.head())
 
 # Gọi API và lưu vào SQLite
 def fetch_and_store_data():
@@ -112,6 +128,6 @@ def chart_word_cloud():
 if __name__ == '__main__':
     init_db()  # Tạo bảng nếu chưa có
     # app.run(debug=True)
-    import os
     port = int(os.environ.get('PORT', 8080))  # Dùng 8080 là port mặc định khi không có biến môi trường
-    app.run(host='0.0.0.0', port=port)
+    read_from_file_and_store()
+    # app.run(host='0.0.0.0', port=port)
