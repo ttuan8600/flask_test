@@ -4,6 +4,7 @@ import sqlite3
 from wordcloud import WordCloud
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import os
 
 app = Flask(__name__)
@@ -20,6 +21,14 @@ def init_db():
             average_population REAL
         )
     ''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS tuanTable (
+        Tỉnh_Thành_phố TEXT,
+        Cạnh_tranh_bình_đẳng REAL,
+        Vùng TEXT
+    )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -38,9 +47,21 @@ def read_from_file_and_store():
 
     fp = os.path.join(dataset_path, fn)
 
-    df = pd.read_excel(fp, index_col=0)
+    df = pd.read_excel(fp, sheet_name='Tổng hợp', usecols=["Vùng", "Tỉnh/Thành phố", "CSTP 6: Cạnh tranh bình đẳng"])
 
-    print(df.head())
+    # print(df.head())
+
+    conn = sqlite3.connect('data_sqlite.db')
+    cursor = conn.cursor()
+
+    for index, row in df.iterrows():
+        cursor.execute('''
+        INSERT INTO tuanTable (Tỉnh_Thành_phố, Cạnh_tranh_bình_đẳng, Vùng)
+        VALUES (?, ?, ?)
+        ''', (row['Tỉnh/Thành phố'], row['CSTP 6: Cạnh tranh bình đẳng'], row['Vùng']))
+
+    conn.commit()
+    conn.close()
 
 # Gọi API và lưu vào SQLite
 def fetch_and_store_data():
@@ -79,6 +100,33 @@ def fetch_and_store_data():
         
         conn.commit()
         conn.close()
+def get_data():
+    conn = sqlite3.connect('data_sqlite.db')
+    df_from_db = pd.read_sql_query("SELECT * FROM tuanTable", conn)
+    conn.close()
+    return df_from_db
+
+def graph_test(df):
+    df_grouped = df.groupby('Vùng')
+    fig = go.Figure()
+
+    for name, group in df_grouped:
+        bottom = 0
+        for index, row in group.iterrows():
+            fig.add_trace(go.Bar(
+                x=[name],
+                y=[row['Cạnh_tranh_bình_đẳng']],
+                base=bottom,
+                name=row['Tỉnh_Thành_phố']
+            ))
+            bottom += row['Cạnh_tranh_bình_đẳng']
+
+    fig.update_layout(
+        barmode='stack',
+        yaxis_title='Cạnh tranh bình đẳng',
+        title='Sự cạnh tranh bình đẳng giữa các vùng'
+    )
+    fig.show()
 
 # Lấy dữ liệu từ SQLite
 def get_data_from_db():
@@ -107,7 +155,9 @@ def create_word_cloud(data):
 def chart_bar():
     fetch_and_store_data()  # Lấy và lưu dữ liệu từ API
     data = get_data_from_db()  # Lấy dữ liệu từ SQLite
-    
+    read_from_file_and_store()
+    df = get_data()
+    graph_test(df)
     # Chuẩn bị dữ liệu cho biểu đồ
     province_names = [item[0] for item in data]
     average_populations = [item[1] for item in data]
@@ -128,6 +178,6 @@ def chart_word_cloud():
 if __name__ == '__main__':
     init_db()  # Tạo bảng nếu chưa có
     # app.run(debug=True)
+
     port = int(os.environ.get('PORT', 8080))  # Dùng 8080 là port mặc định khi không có biến môi trường
-    read_from_file_and_store()
-    # app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
