@@ -5,6 +5,7 @@ from wordcloud import WordCloud
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+import plotly.express as px
 import os
 
 app = Flask(__name__)
@@ -21,10 +22,13 @@ def init_db():
             average_population REAL
         )
     ''')
+
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS tuanTable (
+    CREATE TABLE IF NOT EXISTS newTuanTable (
         Tỉnh_Thành_phố TEXT,
         Cạnh_tranh_bình_đẳng REAL,
+        Tiếp_cận_đất_đai REAL, 
+        Thiết_chế_pháp_lý_An_ninh_trật_tự REAL,
         Vùng TEXT
     )
     ''')
@@ -47,7 +51,7 @@ def read_from_file_and_store():
 
     fp = os.path.join(dataset_path, fn)
 
-    df = pd.read_excel(fp, sheet_name='Tổng hợp', usecols=["Vùng", "Tỉnh/Thành phố", "CSTP 6: Cạnh tranh bình đẳng"])
+    df = pd.read_excel(fp, sheet_name='Tổng hợp', usecols=["Vùng", "Tỉnh/Thành phố", "CSTP 6: Cạnh tranh bình đẳng", "CSTP 2: Tiếp cận đất đai", "CSTP 10: Thiết chế pháp lý & An ninh trật tự"])
 
     # print(df.head())
 
@@ -56,9 +60,9 @@ def read_from_file_and_store():
 
     for index, row in df.iterrows():
         cursor.execute('''
-        INSERT INTO tuanTable (Tỉnh_Thành_phố, Cạnh_tranh_bình_đẳng, Vùng)
-        VALUES (?, ?, ?)
-        ''', (row['Tỉnh/Thành phố'], row['CSTP 6: Cạnh tranh bình đẳng'], row['Vùng']))
+        INSERT INTO newTuanTable (Tỉnh_Thành_phố, Cạnh_tranh_bình_đẳng, Tiếp_cận_đất_đai, Thiết_chế_pháp_lý_An_ninh_trật_tự, Vùng)
+        VALUES (?, ?, ?, ?, ?)
+        ''', (row['Tỉnh/Thành phố'], row['CSTP 2: Tiếp cận đất đai'], row['CSTP 6: Cạnh tranh bình đẳng'], row['CSTP 10: Thiết chế pháp lý & An ninh trật tự'], row['Vùng']))
 
     conn.commit()
     conn.close()
@@ -102,31 +106,18 @@ def fetch_and_store_data():
         conn.close()
 def get_data():
     conn = sqlite3.connect('data_sqlite.db')
-    df_from_db = pd.read_sql_query("SELECT * FROM tuanTable", conn)
+    df_from_db = pd.read_sql_query("SELECT * FROM newTuanTable", conn)
     conn.close()
     return df_from_db
 
 def graph_test(df):
-    df_grouped = df.groupby('Vùng')
-    fig = go.Figure()
+    df_grouped = df.groupby('Vùng').sum()
+    print(df_grouped)
 
-    for name, group in df_grouped:
-        bottom = 0
-        for index, row in group.iterrows():
-            fig.add_trace(go.Bar(
-                x=[name],
-                y=[row['Cạnh_tranh_bình_đẳng']],
-                base=bottom,
-                name=row['Tỉnh_Thành_phố']
-            ))
-            bottom += row['Cạnh_tranh_bình_đẳng']
-
-    fig.update_layout(
-        barmode='stack',
-        yaxis_title='Cạnh tranh bình đẳng',
-        title='Sự cạnh tranh bình đẳng giữa các vùng'
-    )
+    fig = px.pie(df_grouped, values='Cạnh_tranh_bình_đẳng', names=df_grouped.index,
+                 title='Tỷ lệ cạnh tranh bình đẳng giữa các vùng')
     fig.show()
+
 
 # Lấy dữ liệu từ SQLite
 def get_data_from_db():
