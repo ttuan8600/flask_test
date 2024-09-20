@@ -112,8 +112,6 @@ def get_data():
 
 def graph_test(df):
     df_grouped = df.groupby('Vùng').sum()
-    print(df_grouped)
-
     fig = px.pie(df_grouped, values='Cạnh_tranh_bình_đẳng', names=df_grouped.index,
                  title='Tỷ lệ cạnh tranh bình đẳng giữa các vùng')
     fig.show()
