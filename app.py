@@ -130,6 +130,32 @@ def get_data():
     conn.close()
     return df_from_db
 
+def visualize_crime_data():
+    conn = sqlite3.connect('data_sqlite.db')
+    df = pd.read_sql_query("SELECT * FROM crimes", conn)
+    conn.close()
+    provinces = [row[0] for row in df]
+    cases_2022 = [row[1] for row in df if row[1] == 2022]
+    cases_2023 = [row[2] for row in df if row[2] == 2023]
+
+    plt.figure(figsize=(12, 6))  # Adjust figure size for better readability
+    bar_width = 0.35  # Adjust bar width for clearer separation
+    index = range(len(provinces))  # Create x-axis positions for bars
+
+    # Plot bars for 2022 cases
+    plt.bar(index, cases_2022, bar_width, label='2022 Cases')
+
+    # Plot bars for 2023 cases with a slight offset on the x-axis
+    plt.bar([p + bar_width for p in index], cases_2023, bar_width, label='2023 Cases')
+
+    plt.xlabel("Province Name")
+    plt.ylabel("Number of Cases")
+    plt.title("Number of Crimes Cases in Each Province (2022 vs 2023)")
+    plt.xticks([p + bar_width / 2 for p in index], provinces, rotation=45, ha="right")  # Adjust x-axis labels
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
 def graph_test(df):
     df_grouped = df.groupby('Vùng').sum()
     fig = px.pie(df_grouped, values='Cạnh_tranh_bình_đẳng', names=df_grouped.index,
