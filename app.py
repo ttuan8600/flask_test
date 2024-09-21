@@ -121,7 +121,20 @@ def fetch_and_store_data():
             average_population = item[2] if item[2] != "" else 0 
             cursor.execute('INSERT INTO provinces (province_code, province_name, average_population) VALUES (?, ?, ?)', 
                            (province_code, province_name, average_population))
-        
+
+        data = [
+            ["Da Nang", 2022, 100, 80000],  # 2022 data for Da Nang
+            ["Da Nang", 2023, 125, 100000],  # 2023 data for Da Nang
+            ["Ho Chi Minh City", 2022, 650, 8000000],  # 2022 data for HCMC
+            ["Ho Chi Minh City", 2023, 789, 9000000],  # 2023 data for HCMC
+            ["Ha Noi", 2022, 123, 1491],
+            ["Ha Noi", 2023, 1515, 123123]
+        ]
+
+        # Insert data into the table
+        for row in data:
+            cursor.execute("INSERT INTO crime_data VALUES (?, ?, ?, ?)", row)
+
         conn.commit()
         conn.close()
 def get_data():
@@ -157,10 +170,24 @@ def visualize_crime_data():
     plt.show()
 
 def graph_test(df):
-    df_grouped = df.groupby('Vùng').sum()
-    fig = px.pie(df_grouped, values='Cạnh_tranh_bình_đẳng', names=df_grouped.index,
-                 title='Tỷ lệ cạnh tranh bình đẳng giữa các vùng')
-    fig.show()
+    # Create a plotly figure object
+    fig = Figure(data=[
+        Pie(labels=df_grouped.index, values=df_grouped['Cạnh_tranh_bình_đẳng'], hole=0.4,
+            title='Tỷ lệ cạnh tranh bình đẳng giữa các vùng')
+    ])
+
+    # Update layout for better interactivity and aesthetics
+    fig.update_layout(
+        title_x=0.5,  # Center title
+        annotations=[dict(text=percent, x=i, y=0.5, font_size=14, showarrow=False)
+                     for i, percent in
+                     enumerate(df_grouped['Cạnh_tranh_bình_đẳng'] / df_grouped['Cạnh_tranh_bình_đẳng'].sum() * 100)],
+        # Add percentage annotations
+        legend_title_text="Vùng"  # Update legend title
+    )
+
+    # Show the interactive chart
+    fig.show() 
 
 
 # Lấy dữ liệu từ SQLite
