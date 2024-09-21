@@ -24,15 +24,35 @@ def init_db():
     ''')
 
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS newTuanTable (
-        Tỉnh_Thành_phố TEXT,
-        Cạnh_tranh_bình_đẳng REAL,
-        Tiếp_cận_đất_đai REAL, 
-        Thiết_chế_pháp_lý_An_ninh_trật_tự REAL,
-        Vùng TEXT
-    )
+        CREATE TABLE IF NOT EXISTS gradRate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            province_name TEXT,
+            year INTEGER,
+            percentage REAL 
+        )
     ''')
 
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS medicalUnits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            province_name TEXT,
+            year INTEGER,
+            hospitals REAL, 
+            clinics REAL,
+            nursings REAL,
+            local REAL
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS crimes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            province_name TEXT,
+            year INTEGER,
+            cases REAL, 
+            people REAL
+        )
+    ''')
     conn.commit()
     conn.close()
 
